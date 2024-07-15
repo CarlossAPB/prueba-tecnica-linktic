@@ -5,7 +5,6 @@ namespace Tests\Unit;
 use Tests\TestCase;
 use App\Models\Task;
 use App\Models\User;
-use App\Http\Controllers\AuthController;
 
 class TaskTest extends TestCase
 {
@@ -17,6 +16,17 @@ class TaskTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create();
+
+        $loginResponse = $this->postJson('/api/login', [
+            'email' => $this->user->email,
+            'password' => 'password',
+        ]);
+
+        $token = $loginResponse->json('access_token');
+
+        $this->headers = [
+            'Authorization' => 'Bearer ' . $token,
+        ];
     }
 
     public function test_index_returns_all_tasks()
