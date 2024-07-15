@@ -5,17 +5,16 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class TaskController extends Controller
 {
 
     private $requestValidations = [
-        "SAVE" => [
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'status' => 'required|string|in:pending,in_progress,completed',
-            "due_date" => 'nullable|date'
-        ]
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'status' => 'required|string|in:pending,in_progress,completed',
+        "due_date" => 'required|date'
     ];
 
     public function index()
@@ -40,9 +39,13 @@ class TaskController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate($this->requestValidations);
+        $validator = Validator::make($request->all(), $this->requestValidations);
 
-        $task = Task::create($request->all());
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $task = Task::create($validator->validated());
 
         return response()->json([
             'message' => 'Task created successfully',
@@ -52,10 +55,14 @@ class TaskController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate($this->requestValidations);
+        $validator = Validator::make($request->all(), $this->requestValidations);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
 
         $task = Task::findOrFail($id);
-        $task->update($request->all());
+        $task->update($validator->validated());
 
         return response()->json([
             'message' => 'Task updated successfully',
